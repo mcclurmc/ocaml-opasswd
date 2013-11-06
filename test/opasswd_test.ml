@@ -96,11 +96,23 @@ let test_gc () =
 
   ()
 
+let test_ctypes () =
+  let open Passwd in
+  (* let pw = getpwnam' "backup" in *)
+  (* let pass = getf !@pw pw_passwd in *)
+  (* print_endline ("Password for backup: " ^ pass); *)
+  let pw = getpwnam "backup" in
+  Printf.printf "Password for backup: %s\n" pw.passwd;
+  Printf.printf "UID for backup: %d\n" pw.uid
+
 let main =
-  test_shadow ();
-  test_shadow ();
-  test_unshadow ();
-  test_gc ()
+  test_shadow (); print_endline "* finished test_shadow"; flush Pervasives.stdout;
+  test_passwd (); print_endline "* finished test_passwd"; flush Pervasives.stdout;
+  test_passwd (); print_endline "* finished test_passwd"; flush Pervasives.stdout;
+  test_unshadow (); print_endline "* finished test_unshadow"; flush Pervasives.stdout;
+  (* test_gc (); *)
+  test_ctypes (); print_endline "* finished test_ctypes"; flush Pervasives.stdout;
+  ()
 
 (* Local Variables: *)
 (* indent-tabs-mode: nil *)
