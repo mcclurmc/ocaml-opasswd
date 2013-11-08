@@ -12,33 +12,26 @@ let chspwd_test name pass =
 
   Printf.printf "Getting password for %s\n" name;
 
-  Printf.printf "Lock acquired? %b\n" (lckpwdf ());
-  match getspnam name with
-  | None -> raise @@ Invalid_argument name
-  | Some sp ->
-     Printf.printf "Lock released? %b\n" (ulckpwdf ());
+  let locked = lckpwdf () in
+  Printf.printf "Lock acquired? %b\n" locked;
+  if not locked
+  then (print_endline "chspwd_test couldn't acquire shadow lock"; None)
+  else
+    match getspnam name with
+    | None -> raise @@ Invalid_argument name
+    | Some sp ->
+       Printf.printf "Lock released? %b\n" (ulckpwdf ());
 
-     Printf.printf "%s's passwd: %s\n" name sp.passwd;
-     Printf.printf "%s's lstchg: %Ld\n" name sp.last_chg;
-     Printf.printf "%s's min: %Ld\n" name sp.min;
-     Printf.printf "%s's max: %Ld\n" name sp.max;
-     Printf.printf "%s's flag: %Ld\n" name sp.flag;
+       Printf.printf "%s's passwd: %s\n" name sp.passwd;
+       Printf.printf "%s's lstchg: %Ld\n" name sp.last_chg;
+       Printf.printf "%s's min: %Ld\n" name sp.min;
+       Printf.printf "%s's max: %Ld\n" name sp.max;
+       Printf.printf "%s's flag: %Ld\n" name sp.flag;
 
-     Printf.printf "setting %s's password to '%s'\n" name pass;
-     let sp = { sp with passwd = pass } in
+       Printf.printf "setting %s's password to '%s'\n" name pass;
+       let sp = { sp with passwd = pass } in
 
-     let f = open_in tmp_shadow_file in
-     begin
-       try
-         let l = input_line f in
-         print_endline "we wrote:";
-         print_endline l
-       with _ ->
-         Printf.printf "Couldn't read file '%s'\n" tmp_shadow_file
-     end;
-     close_in f;
-
-     sp
+       Some sp
 
 let create_file file =
   openfile file [ O_RDONLY; O_CREAT ] 0o666 |> close
@@ -112,8 +105,10 @@ let test_gc () =
 
 let test_chspwd name pass =
   let open Shadow in
-  let sp = chspwd_test "root" "foobar" in
-  Printf.printf "test_chspwd passwd? %b\n" (sp.passwd = "foobar");
+  (match (chspwd_test "root" "foobar") with
+  | None -> ()
+  | Some sp ->
+     Printf.printf "test_chspwd passwd? %b\n" (sp.passwd = "foobar"));
   print_endline "* finished test_chspwd"; flush Pervasives.stdout
 
 let test_null_passwd name =
