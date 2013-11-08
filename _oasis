@@ -12,20 +12,19 @@ Library oPasswd
   Path:         lib
   FindlibName:  oPasswd
   Pack:         true
-  Modules:      Passwd, Shadow, Common #, Passwd_ctypes
+  Modules:      Passwd, Shadow, Common
   BuildDepends: unix, ctypes, ctypes.foreign
-  NativeOpt:    -warn-error +a -bin-annot -short-paths -g # -runtime-variant d -verbose
-  CSources:     shadow_stubs.c, common_stubs.c, common.h # passwd_stubs.c, 
-  CCOpt:        -Wall -O3 -g
+  ByteOpt:      -warn-error +a -bin-annot -short-paths -g -runtime-variant d -verbose
+  NativeOpt:    -warn-error +a -bin-annot -short-paths -g -runtime-variant d -verbose
 
 Executable opasswd_test
-  Path:	           test
-  BuildTools:      ocamlbuild
-  MainIs:          opasswd_test.ml
-  BuildDepends:	   oPasswd
-  NativeOpt:       -warn-error +a -bin-annot
-  CompiledObject:  best
-  Install:         false
+  Path:	          test
+  BuildTools:     ocamlbuild
+  MainIs:         opasswd_test.ml
+  BuildDepends:	  oPasswd
+  NativeOpt:      -warn-error +a -bin-annot -short-paths -g -runtime-variant d -verbose
+  CompiledObject: best
+  Install:        false
 
 Test opasswd_test
   Command: sudo _build/test/opasswd_test.native

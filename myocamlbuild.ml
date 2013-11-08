@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 48d83ec8bc2dda564e4e9bbcce83a162) *)
+(* DO NOT EDIT (digest: fdaf31bd5acfb3e4a6992f5afbb40ed2) *)
 module OASISGettext = struct
 (* # 21 "src/oasis/OASISGettext.ml" *)
 
@@ -478,20 +478,22 @@ open Ocamlbuild_plugin;;
 let package_default =
   {
      MyOCamlbuildBase.lib_ocaml = [("oPasswd", ["lib"])];
-     lib_c = [("oPasswd", "lib", ["lib/common.h"])];
+     lib_c = [];
      flags =
        [
-          (["oasis_library_opasswd_ccopt"; "compile"],
+          (["oasis_library_opasswd_byte"; "ocaml"; "link"; "byte"],
             [
                (OASISExpr.EBool true,
                  S
                    [
-                      A "-ccopt";
-                      A "-Wall";
-                      A "-ccopt";
-                      A "-O3";
-                      A "-ccopt";
-                      A "-g"
+                      A "-warn-error";
+                      A "+a";
+                      A "-bin-annot";
+                      A "-short-paths";
+                      A "-g";
+                      A "-runtime-variant";
+                      A "d";
+                      A "-verbose"
                    ])
             ]);
           (["oasis_library_opasswd_native"; "ocaml"; "link"; "native"],
@@ -503,7 +505,25 @@ let package_default =
                       A "+a";
                       A "-bin-annot";
                       A "-short-paths";
-                      A "-g"
+                      A "-g";
+                      A "-runtime-variant";
+                      A "d";
+                      A "-verbose"
+                   ])
+            ]);
+          (["oasis_library_opasswd_byte"; "ocaml"; "ocamldep"; "byte"],
+            [
+               (OASISExpr.EBool true,
+                 S
+                   [
+                      A "-warn-error";
+                      A "+a";
+                      A "-bin-annot";
+                      A "-short-paths";
+                      A "-g";
+                      A "-runtime-variant";
+                      A "d";
+                      A "-verbose"
                    ])
             ]);
           (["oasis_library_opasswd_native"; "ocaml"; "ocamldep"; "native"],
@@ -515,7 +535,25 @@ let package_default =
                       A "+a";
                       A "-bin-annot";
                       A "-short-paths";
-                      A "-g"
+                      A "-g";
+                      A "-runtime-variant";
+                      A "d";
+                      A "-verbose"
+                   ])
+            ]);
+          (["oasis_library_opasswd_byte"; "ocaml"; "compile"; "byte"],
+            [
+               (OASISExpr.EBool true,
+                 S
+                   [
+                      A "-warn-error";
+                      A "+a";
+                      A "-bin-annot";
+                      A "-short-paths";
+                      A "-g";
+                      A "-runtime-variant";
+                      A "d";
+                      A "-verbose"
                    ])
             ]);
           (["oasis_library_opasswd_native"; "ocaml"; "compile"; "native"],
@@ -527,14 +565,27 @@ let package_default =
                       A "+a";
                       A "-bin-annot";
                       A "-short-paths";
-                      A "-g"
+                      A "-g";
+                      A "-runtime-variant";
+                      A "d";
+                      A "-verbose"
                    ])
             ]);
           (["oasis_executable_opasswd_test_native"; "ocaml"; "link"; "native"
            ],
             [
                (OASISExpr.EBool true,
-                 S [A "-warn-error"; A "+a"; A "-bin-annot"])
+                 S
+                   [
+                      A "-warn-error";
+                      A "+a";
+                      A "-bin-annot";
+                      A "-short-paths";
+                      A "-g";
+                      A "-runtime-variant";
+                      A "d";
+                      A "-verbose"
+                   ])
             ]);
           ([
               "oasis_executable_opasswd_test_native";
@@ -544,7 +595,17 @@ let package_default =
            ],
             [
                (OASISExpr.EBool true,
-                 S [A "-warn-error"; A "+a"; A "-bin-annot"])
+                 S
+                   [
+                      A "-warn-error";
+                      A "+a";
+                      A "-bin-annot";
+                      A "-short-paths";
+                      A "-g";
+                      A "-runtime-variant";
+                      A "d";
+                      A "-verbose"
+                   ])
             ]);
           ([
               "oasis_executable_opasswd_test_native";
@@ -554,7 +615,17 @@ let package_default =
            ],
             [
                (OASISExpr.EBool true,
-                 S [A "-warn-error"; A "+a"; A "-bin-annot"])
+                 S
+                   [
+                      A "-warn-error";
+                      A "+a";
+                      A "-bin-annot";
+                      A "-short-paths";
+                      A "-g";
+                      A "-runtime-variant";
+                      A "d";
+                      A "-verbose"
+                   ])
             ])
        ];
      includes = [("test", ["lib"])];
@@ -563,6 +634,6 @@ let package_default =
 
 let dispatch_default = MyOCamlbuildBase.dispatch_default package_default;;
 
-# 567 "myocamlbuild.ml"
+# 638 "myocamlbuild.ml"
 (* OASIS_STOP *)
 Ocamlbuild_plugin.dispatch dispatch_default;;

@@ -25,8 +25,8 @@ val setspent : unit -> unit
 val endspent : unit -> unit
 val putspent : Passwd.file_descr -> t -> unit
 
-external lckpwdf : unit -> bool = "stub_lckpwdf"
-external ulckpwdf : unit -> bool = "stub_ulckpwdf"
+val lckpwdf : unit -> bool
+val ulckpwdf : unit -> bool
 
 val with_lock : (unit -> 'a) -> 'a
 

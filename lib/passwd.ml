@@ -5,7 +5,8 @@ open PosixTypes
 type file_descr = unit ptr
 let file_descr : file_descr typ = ptr void
 
-let fopen = foreign ~check_errno:true "fopen" (string @-> string @-> returning file_descr)
+let fopen =
+  foreign ~check_errno:true "fopen" (string @-> string @-> returning file_descr)
 let fclose' = foreign ~check_errno:true "fclose" (file_descr @-> returning int)
 let fclose fd = fclose' fd |> ignore
 

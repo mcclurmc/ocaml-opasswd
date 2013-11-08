@@ -63,10 +63,12 @@ let to_shadow_t sp =
 
 let shadow_file = "/etc/shadow"
 
-let getspnam' = foreign ~check_errno:true "getspnam" (string @-> returning (ptr shadow_t))
+let getspnam' =
+  foreign ~check_errno:true "getspnam" (string @-> returning (ptr shadow_t))
 let getspnam name = getspnam' name |> from_shadow_t
 
-let getspent' = foreign ~check_errno:true "getspent" (void @-> returning (ptr_opt shadow_t))
+let getspent' =
+  foreign ~check_errno:true "getspent" (void @-> returning (ptr_opt shadow_t))
 let getspent () = getspent' () |> from_shadow_t_opt
 
 let setspent = foreign ~check_errno:true "setspent" (void @-> returning void)
@@ -77,21 +79,10 @@ let putspent' =
           "putspent" (ptr shadow_t @-> Passwd.file_descr @-> returning int)
 let putspent fd sp = putspent' (to_shadow_t sp |> addr) fd |> ignore
 
-external lckpwdf : unit -> bool = "stub_lckpwdf"
-external ulckpwdf : unit -> bool = "stub_ulckpwdf"
-
-external stub_fopen : string -> Passwd.file_descr = "stub_fopen"
-external stub_fclose : Passwd.file_descr -> unit = "stub_fclose"
-
-let open_shadow ?(file=shadow_file) () =
-  (* try *)
-    stub_fopen file
-  (* with _ -> raise Unix.(Unix_error (EAGAIN, "open_shadow", file)) *)
-
-let close_shadow fd =
-  (* try *)
-    stub_fclose fd
-  (* with _ -> raise Unix.(Unix_error (EBADF, "close_shadow", "")) *)
+let lckpwdf' = foreign "lckpwdf" (void @-> returning int)
+let lckpwdf () = lckpwdf' () <> 0
+let ulckpwdf' = foreign "ulckpwdf" (void @-> returning int)
+let ulckpwdf () = ulckpwdf' () <> 0
 
 let shadow_enabled () =
   try Unix.access shadow_file [Unix.F_OK]; true with _ -> false
@@ -113,9 +104,9 @@ let rec update_db db pw =
   in loop [] db
 
 let write_db ?(file=shadow_file) db =
-  let fd = open_shadow ~file () in
+  let fd = Passwd.fopen file "r+" in
   List.iter (putspent fd) db;
-  close_shadow fd
+  Passwd.fclose fd
 
 let to_string p =
   let str i =
