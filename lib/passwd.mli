@@ -17,6 +17,10 @@ type db = t list
 val db_to_string : db -> string
 
 type file_descr
+val file_descr : file_descr Ctypes.typ
+
+val fopen : string -> string -> file_descr
+val fclose : file_descr -> unit
 
 val getpwnam : string -> t
 val getpwuid : int -> t

@@ -1,17 +1,17 @@
 let get_password name =
   if Shadow.shadow_enabled ()
   then Shadow.(with_lock (fun () ->
-    (getspnam name).pwd))
+    (getspnam name).passwd))
   else Passwd.((getpwnam name).passwd)
 
 let put_password name cipher =
   if Shadow.shadow_enabled ()
   then Shadow.(with_lock (fun () ->
     let sp = getspnam name in
-    if cipher <> sp.pwd
+    if cipher <> sp.passwd
     then begin
       get_db ()
-      |> fun db -> update_db db { sp with pwd = cipher }
+      |> fun db -> update_db db { sp with passwd = cipher }
       |> write_db
     end))
   else Passwd.(
@@ -29,7 +29,7 @@ let unshadow () =
     let shadow_db = Shadow.(with_lock get_db)
     and passwd_db = Passwd.get_db () in
     List.map2
-      (fun pw sp -> { pw with Passwd.passwd = sp.Shadow.pwd })
+      (fun pw sp -> { pw with Passwd.passwd = sp.Shadow.passwd })
       passwd_db shadow_db
     |> Passwd.db_to_string
   end

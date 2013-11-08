@@ -14,7 +14,7 @@ Library oPasswd
   Pack:         true
   Modules:      Passwd, Shadow, Common #, Passwd_ctypes
   BuildDepends: unix, ctypes, ctypes.foreign
-  NativeOpt:    -warn-error +a -bin-annot -g -runtime-variant d -verbose
+  NativeOpt:    -warn-error +a -bin-annot -short-paths -g # -runtime-variant d -verbose
   CSources:     shadow_stubs.c, common_stubs.c, common.h # passwd_stubs.c, 
   CCOpt:        -Wall -O3 -g
 

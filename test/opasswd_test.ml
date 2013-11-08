@@ -14,14 +14,14 @@ let chpwd_test name =
   let sp = getspnam name in
   Printf.printf "Lock released? %b\n" (ulckpwdf ());
 
-  Printf.printf "%s's passwd: %s\n" name sp.pwd;
+  Printf.printf "%s's passwd: %s\n" name sp.passwd;
   Printf.printf "%s's lstchg: %Ld\n" name sp.last_chg;
   Printf.printf "%s's min: %Ld\n" name sp.min;
   Printf.printf "%s's max: %Ld\n" name sp.max;
   Printf.printf "%s's flag: %Ld\n" name sp.flag;
 
   Printf.printf "setting %s's password to 'foobar'\n" name;
-  let sp = { sp with pwd = "foobar" } in
+  let sp = { sp with passwd = "foobar" } in
 
   let f = open_in tmp_shadow_file in
   begin
@@ -46,7 +46,7 @@ let test_shadow () =
     Shadow.with_lock Shadow.(fun () ->
       let sp = getspnam name in
       let db = get_db () in
-      let db = update_db db { sp with pwd = "foobar" } in
+      let db = update_db db { sp with passwd = "foobar" } in
     (* print_endline @@ String.concat "\n" @@ List.map to_string db; *)
       write_db ~file:tmp_shadow_file db)
   with _ ->

@@ -1,33 +1,87 @@
-let shadow_file = "/etc/shadow"
+open Ctypes
+open Foreign
+open PosixTypes
 
-type ent = {
-  name : string;
-  pwd : string;
+type t = {
+  name     : string;
+  passwd   : string;
   last_chg : int64;
-  min : int64;
-  max : int64;
-  warn : int64;
-  inact : int64;
-  expire : int64;
-  flag : int64;
+  min      : int64;
+  max      : int64;
+  warn     : int64;
+  inact    : int64;
+  expire   : int64;
+  flag     : int64;
 }
 
-type db = ent list
+type db = t list
 
-type file_descr = int64
+type shadow_t
 
-external getspnam : string -> ent = "stub_getspnam"
+let shadow_t : shadow_t structure typ = structure "passwd"
 
-external getspent : unit -> ent option = "stub_getspent"
-external setspent : unit -> unit = "stub_setspent"
-external endspent : unit -> unit = "stub_endspent"
-external putspent : file_descr -> ent -> unit = "stub_putspent_fd"
+let sp_name     = shadow_t *:* string
+let sp_passwd   = shadow_t *:* string
+let sp_last_chg = shadow_t *:* int64_t
+let sp_min      = shadow_t *:* int64_t
+let sp_max      = shadow_t *:* int64_t
+let sp_warn     = shadow_t *:* int64_t
+let sp_inact    = shadow_t *:* int64_t
+let sp_expire   = shadow_t *:* int64_t
+let sp_flag     = shadow_t *:* int64_t
+
+let () = seal shadow_t
+
+let from_shadow_t sp = {
+  name     = getf !@sp sp_name;
+  passwd   = getf !@sp sp_passwd;
+  last_chg = getf !@sp sp_last_chg;
+  min      = getf !@sp sp_min;
+  max      = getf !@sp sp_max;
+  warn     = getf !@sp sp_warn;
+  inact    = getf !@sp sp_inact;
+  expire   = getf !@sp sp_expire;
+  flag     = getf !@sp sp_flag;
+}
+
+let from_shadow_t_opt = function
+  | None -> None
+  | Some sp -> Some (from_shadow_t sp)
+
+let to_shadow_t sp =
+  let sp_t : shadow_t structure = make shadow_t in
+  setf sp_t sp_name sp.name;
+  setf sp_t sp_passwd sp.passwd;
+  setf sp_t sp_last_chg sp.last_chg;
+  setf sp_t sp_min sp.min;
+  setf sp_t sp_max sp.max;
+  setf sp_t sp_warn sp.warn;
+  setf sp_t sp_inact sp.inact;
+  setf sp_t sp_expire sp.expire;
+  setf sp_t sp_flag sp.flag;
+  sp_t
+
+let shadow_file = "/etc/shadow"
+
+let getspnam' = foreign ~check_errno:true "getspnam" (string @-> returning (ptr shadow_t))
+let getspnam name = getspnam' name |> from_shadow_t
+
+let getspent' = foreign ~check_errno:true "getspent" (void @-> returning (ptr_opt shadow_t))
+let getspent () = getspent' () |> from_shadow_t_opt
+
+let setspent = foreign ~check_errno:true "setspent" (void @-> returning void)
+let endspent = foreign ~check_errno:true "endspent" (void @-> returning void)
+
+let putspent' =
+  foreign ~check_errno:true
+          "putspent" (ptr shadow_t @-> Passwd.file_descr @-> returning int)
+let putspent fd sp = putspent' (to_shadow_t sp |> addr) fd |> ignore
 
 external lckpwdf : unit -> bool = "stub_lckpwdf"
 external ulckpwdf : unit -> bool = "stub_ulckpwdf"
 
-external stub_fopen : string -> file_descr = "stub_fopen"
-external stub_fclose : file_descr -> unit = "stub_fclose"
+external stub_fopen : string -> Passwd.file_descr = "stub_fopen"
+external stub_fclose : Passwd.file_descr -> unit = "stub_fclose"
 
 let open_shadow ?(file=shadow_file) () =
   (* try *)
@@ -51,10 +105,10 @@ let get_db () =
   setspent () ;
   loop [] |> List.rev
 
-let rec update_db db ent =
+let rec update_db db pw =
   let rec loop acc = function
     | [] -> List.rev acc
-    | e :: es when e.name = ent.name -> loop (ent::acc) es
+    | e :: es when e.name = pw.name -> loop (pw::acc) es
     | e :: es -> loop (e::acc) es
   in loop [] db
 
@@ -70,7 +124,7 @@ let to_string p =
     else "" in
   Printf.sprintf "%s:%s:%s:%s:%s:%s:%s:%s:%s"
     p.name
-    p.pwd
+    p.passwd
     (str p.last_chg)
     (str p.min)
     (str p.max)

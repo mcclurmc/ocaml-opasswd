@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 70d73a90cea44c273467c546af8bf75f) *)
+(* DO NOT EDIT (digest: 48d83ec8bc2dda564e4e9bbcce83a162) *)
 module OASISGettext = struct
 (* # 21 "src/oasis/OASISGettext.ml" *)
 
@@ -502,10 +502,8 @@ let package_default =
                       A "-warn-error";
                       A "+a";
                       A "-bin-annot";
-                      A "-g";
-                      A "-runtime-variant";
-                      A "d";
-                      A "-verbose"
+                      A "-short-paths";
+                      A "-g"
                    ])
             ]);
           (["oasis_library_opasswd_native"; "ocaml"; "ocamldep"; "native"],
@@ -516,10 +514,8 @@ let package_default =
                       A "-warn-error";
                       A "+a";
                       A "-bin-annot";
-                      A "-g";
-                      A "-runtime-variant";
-                      A "d";
-                      A "-verbose"
+                      A "-short-paths";
+                      A "-g"
                    ])
             ]);
           (["oasis_library_opasswd_native"; "ocaml"; "compile"; "native"],
@@ -530,10 +526,8 @@ let package_default =
                       A "-warn-error";
                       A "+a";
                       A "-bin-annot";
-                      A "-g";
-                      A "-runtime-variant";
-                      A "d";
-                      A "-verbose"
+                      A "-short-paths";
+                      A "-g"
                    ])
             ]);
           (["oasis_executable_opasswd_test_native"; "ocaml"; "link"; "native"
@@ -569,6 +563,6 @@ let package_default =
 
 let dispatch_default = MyOCamlbuildBase.dispatch_default package_default;;
 
-# 573 "myocamlbuild.ml"
+# 567 "myocamlbuild.ml"
 (* OASIS_STOP *)
 Ocamlbuild_plugin.dispatch dispatch_default;;

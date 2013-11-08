@@ -5,8 +5,8 @@ open PosixTypes
 type file_descr = unit ptr
 let file_descr : file_descr typ = ptr void
 
-let fopen = foreign "fopen" (string @-> string @-> returning_checking_errno file_descr)
-let fclose' = foreign "fclose" (file_descr @-> returning_checking_errno int)
+let fopen = foreign ~check_errno:true "fopen" (string @-> string @-> returning file_descr)
+let fclose' = foreign ~check_errno:true "fclose" (file_descr @-> returning int)
 let fclose fd = fclose' fd |> ignore
 
 type t = {
@@ -46,6 +46,10 @@ let from_passwd_t pw = {
   shell  = getf !@pw pw_shell;
 }
 
+let from_passwd_t_opt = function
+  | None -> None
+  | Some pw -> Some (from_passwd_t pw)
+
 let to_passwd_t pw =
   let pw_t : passwd_t structure = make passwd_t in
   setf pw_t pw_name pw.name;
@@ -57,29 +61,25 @@ let to_passwd_t pw =
   setf pw_t pw_shell pw.shell;
   pw_t
 
-let from_passwd_t_opt = function
-  | None -> None
-  | Some pw -> Some (from_passwd_t pw)
-
 let passwd_file = "/etc/passwd"
 
-let getpwnam' = foreign "getpwnam" (string @-> returning (ptr passwd_t))
+let getpwnam' = foreign ~check_errno:true "getpwnam" (string @-> returning (ptr passwd_t))
 let getpwnam name = getpwnam' name |> from_passwd_t
 
-let getpwuid' = foreign "getpwuid" (int @-> returning (ptr passwd_t))
+let getpwuid' = foreign ~check_errno:true "getpwuid" (int @-> returning (ptr passwd_t))
 let getpwuid uid = getpwuid' uid |> from_passwd_t
 
-let getpwent' = foreign "getpwent" (void @-> returning (ptr_opt passwd_t))
+let getpwent' = foreign ~check_errno:true "getpwent" (void @-> returning (ptr_opt passwd_t))
 let getpwent () = getpwent' () |> from_passwd_t_opt
 
-(* let getpwent' = foreign "getpwent" (void @-> returning (ptr passwd_t)) *)
+(* let getpwent' = foreign ~check_errno:true "getpwent" (void @-> returning (ptr passwd_t)) *)
 (* let getpwent () = getpwent' () |> from_passwd_t *)
 
-let setpwent = foreign "setpwent" (void @-> returning void)
-let endpwent = foreign "endpwent" (void @-> returning void)
+let setpwent = foreign ~check_errno:true "setpwent" (void @-> returning void)
+let endpwent = foreign ~check_errno:true "endpwent" (void @-> returning void)
 
 let putpwent' =
-  foreign "putpwent" (ptr passwd_t @-> file_descr @-> returning_checking_errno int)
+  foreign ~check_errno:true "putpwent" (ptr passwd_t @-> file_descr @-> returning int)
 let putpwent fd pw = putpwent' (to_passwd_t pw |> addr) fd |> ignore
 
 let get_db () =
