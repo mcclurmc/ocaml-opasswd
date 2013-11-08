@@ -64,8 +64,8 @@ let to_shadow_t sp =
 let shadow_file = "/etc/shadow"
 
 let getspnam' =
-  foreign ~check_errno:true "getspnam" (string @-> returning (ptr shadow_t))
-let getspnam name = getspnam' name |> from_shadow_t
+  foreign ~check_errno:true "getspnam" (string @-> returning (ptr_opt shadow_t))
+let getspnam name = getspnam' name |> from_shadow_t_opt
 
 let getspent' =
   foreign ~check_errno:true "getspent" (void @-> returning (ptr_opt shadow_t))
@@ -80,9 +80,10 @@ let putspent' =
 let putspent fd sp = putspent' (to_shadow_t sp |> addr) fd |> ignore
 
 let lckpwdf' = foreign "lckpwdf" (void @-> returning int)
-let lckpwdf () = lckpwdf' () <> 0
+let lckpwdf () = lckpwdf' () = 0
+
 let ulckpwdf' = foreign "ulckpwdf" (void @-> returning int)
-let ulckpwdf () = ulckpwdf' () <> 0
+let ulckpwdf () = ulckpwdf' () = 0
 
 let shadow_enabled () =
   try Unix.access shadow_file [Unix.F_OK]; true with _ -> false

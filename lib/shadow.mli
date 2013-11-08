@@ -18,7 +18,7 @@ type db = t list
 
 val db_to_string : db -> string
 
-val getspnam : string -> t
+val getspnam : string -> t option
 val getspent : unit -> t option
 
 val setspent : unit -> unit

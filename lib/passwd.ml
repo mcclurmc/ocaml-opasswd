@@ -64,17 +64,17 @@ let to_passwd_t pw =
 
 let passwd_file = "/etc/passwd"
 
-let getpwnam' = foreign ~check_errno:true "getpwnam" (string @-> returning (ptr passwd_t))
-let getpwnam name = getpwnam' name |> from_passwd_t
+let getpwnam' =
+  foreign ~check_errno:true "getpwnam" (string @-> returning (ptr_opt passwd_t))
+let getpwnam name = getpwnam' name |> from_passwd_t_opt
 
-let getpwuid' = foreign ~check_errno:true "getpwuid" (int @-> returning (ptr passwd_t))
-let getpwuid uid = getpwuid' uid |> from_passwd_t
+let getpwuid' =
+  foreign ~check_errno:true "getpwuid" (int @-> returning (ptr_opt passwd_t))
+let getpwuid uid = getpwuid' uid |> from_passwd_t_opt
 
-let getpwent' = foreign ~check_errno:true "getpwent" (void @-> returning (ptr_opt passwd_t))
+let getpwent' =
+  foreign ~check_errno:true "getpwent" (void @-> returning (ptr_opt passwd_t))
 let getpwent () = getpwent' () |> from_passwd_t_opt
-
-(* let getpwent' = foreign ~check_errno:true "getpwent" (void @-> returning (ptr passwd_t)) *)
-(* let getpwent () = getpwent' () |> from_passwd_t *)
 
 let setpwent = foreign ~check_errno:true "setpwent" (void @-> returning void)
 let endpwent = foreign ~check_errno:true "endpwent" (void @-> returning void)

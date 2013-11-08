@@ -22,8 +22,8 @@ val file_descr : file_descr Ctypes.typ
 val fopen : string -> string -> file_descr
 val fclose : file_descr -> unit
 
-val getpwnam : string -> t
-val getpwuid : int -> t
+val getpwnam : string -> t option
+val getpwuid : int -> t option
 val getpwent : unit -> t option
 val setpwent : unit -> unit
 val endpwent : unit -> unit

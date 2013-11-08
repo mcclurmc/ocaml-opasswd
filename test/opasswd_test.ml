@@ -5,73 +5,86 @@ open OPasswd
 let tmp_shadow_file = Unix.getcwd () ^ "/dummy-shadow"
 let tmp_passwd_file = Unix.getcwd () ^ "/dummy-passwd"
 
-let chpwd_test name =
+let test_name = ref "root"
+
+let chspwd_test name pass =
   let open Shadow in
 
   Printf.printf "Getting password for %s\n" name;
 
   Printf.printf "Lock acquired? %b\n" (lckpwdf ());
-  let sp = getspnam name in
-  Printf.printf "Lock released? %b\n" (ulckpwdf ());
+  match getspnam name with
+  | None -> raise @@ Invalid_argument name
+  | Some sp ->
+     Printf.printf "Lock released? %b\n" (ulckpwdf ());
 
-  Printf.printf "%s's passwd: %s\n" name sp.passwd;
-  Printf.printf "%s's lstchg: %Ld\n" name sp.last_chg;
-  Printf.printf "%s's min: %Ld\n" name sp.min;
-  Printf.printf "%s's max: %Ld\n" name sp.max;
-  Printf.printf "%s's flag: %Ld\n" name sp.flag;
+     Printf.printf "%s's passwd: %s\n" name sp.passwd;
+     Printf.printf "%s's lstchg: %Ld\n" name sp.last_chg;
+     Printf.printf "%s's min: %Ld\n" name sp.min;
+     Printf.printf "%s's max: %Ld\n" name sp.max;
+     Printf.printf "%s's flag: %Ld\n" name sp.flag;
 
-  Printf.printf "setting %s's password to 'foobar'\n" name;
-  let sp = { sp with passwd = "foobar" } in
+     Printf.printf "setting %s's password to '%s'\n" name pass;
+     let sp = { sp with passwd = pass } in
 
-  let f = open_in tmp_shadow_file in
-  begin
-    try
-      let l = input_line f in
-      print_endline "we wrote:";
-      print_endline l
-    with _ ->
-      Printf.printf "Couldn't read file '%s'\n" tmp_shadow_file
-  end;
-  close_in f;
+     let f = open_in tmp_shadow_file in
+     begin
+       try
+         let l = input_line f in
+         print_endline "we wrote:";
+         print_endline l
+       with _ ->
+         Printf.printf "Couldn't read file '%s'\n" tmp_shadow_file
+     end;
+     close_in f;
 
-  sp
+     sp
 
 let create_file file =
   openfile file [ O_RDONLY; O_CREAT ] 0o666 |> close
 
 let test_shadow () =
   create_file tmp_shadow_file;
-  let name = "backup" in
+  let name = !test_name in
   try
     Shadow.with_lock Shadow.(fun () ->
-      let sp = getspnam name in
-      let db = get_db () in
-      let db = update_db db { sp with passwd = "foobar" } in
-    (* print_endline @@ String.concat "\n" @@ List.map to_string db; *)
-      write_db ~file:tmp_shadow_file db)
+      match getspnam name with
+      | None -> Printf.printf "Couldn't find user %s\n" name;
+      | Some sp ->
+         let db = get_db () in
+         let db = update_db db { sp with passwd = "foobar" } in
+         (* print_endline @@ String.concat "\n" @@ List.map to_string db; *)
+         write_db ~file:tmp_shadow_file db)
   with _ ->
     print_endline "Couldn't acquire lock, must be root"
 
 let test_passwd () =
   create_file tmp_passwd_file;
   let open Passwd in
-  let name = "backup" in
-  let pw = getpwnam name in
-  let db = get_db () in
-  let db = update_db db { pw with passwd = "barfoo" } in
-  (* print_endline @@ String.concat "\n" @@ List.map to_string db; *)
-  write_db ~file:tmp_passwd_file db
+  let name = !test_name in
+  begin match getpwnam name with
+  | None -> Printf.printf "test_passwd: Couldn't find user %s\n" name
+  | Some pw ->
+     let db = get_db () in
+     let db = update_db db { pw with passwd = "barfoo" } in
+     (* print_endline @@ String.concat "\n" @@ List.map to_string db; *)
+     write_db ~file:tmp_passwd_file db;
+  end;
+  print_endline "* finished test_passwd"; flush Pervasives.stdout
 
 let test_unshadow () =
-  try
-    let passwd = Common.unshadow () in
-    print_endline passwd
-  with _ ->
-    print_endline "Couldn't acquire lock, must be root"
+  begin
+    try
+      let passwd = Common.unshadow () in
+      print_endline passwd
+    with _ ->
+      print_endline "Couldn't acquire lock, must be root";
+  end;
+  print_endline "* finished test_unshadow"; flush Pervasives.stdout
 
 (* Try to blow up GC *)
 let test_gc () =
-  let name = "backup"
+  let name = !test_name
   and iter = 1000000 in
 
   (* Lower GC heap sizes, set verbose *)
@@ -87,31 +100,38 @@ let test_gc () =
   done;
 
   Printf.printf "Testing Shadow.getspnam on %d iterations\n" iter;
-  try
-    for i = 1 to iter do
-      ignore Shadow.(with_lock (fun () -> getspnam name))
-    done;
-  with _ ->
-    print_endline "Couldn't acquire lock, must be root";
+  begin
+    try
+      for i = 1 to iter do
+        ignore Shadow.(with_lock (fun () -> getspnam name))
+      done;
+    with _ ->
+      print_endline "Couldn't acquire lock, must be root";
+  end;
+  print_endline "* finished test_unshadow"; flush Pervasives.stdout
 
-  ()
+let test_chspwd name pass =
+  let open Shadow in
+  let sp = chspwd_test "root" "foobar" in
+  Printf.printf "test_chspwd passwd? %b\n" (sp.passwd = "foobar");
+  print_endline "* finished test_chspwd"; flush Pervasives.stdout
 
-let test_ctypes () =
-  let open Passwd in
-  (* let pw = getpwnam' "backup" in *)
-  (* let pass = getf !@pw pw_passwd in *)
-  (* print_endline ("Password for backup: " ^ pass); *)
-  let pw = getpwnam "backup" in
-  Printf.printf "Password for backup: %s\n" pw.passwd;
-  Printf.printf "UID for backup: %d\n" pw.uid
+let test_null_passwd name =
+  match Passwd.getpwnam name with
+  | None -> ()
+  | Some pw ->
+     Printf.printf "getting %s's gecos val\n" name;
+     Printf.printf "  gecos: %s\n" pw.Passwd.gecos
 
 let main =
-  test_shadow (); print_endline "* finished test_shadow"; flush Pervasives.stdout;
-  test_passwd (); print_endline "* finished test_passwd"; flush Pervasives.stdout;
-  test_passwd (); print_endline "* finished test_passwd"; flush Pervasives.stdout;
-  test_unshadow (); print_endline "* finished test_unshadow"; flush Pervasives.stdout;
-  (* test_gc (); *)
-  test_ctypes (); print_endline "* finished test_ctypes"; flush Pervasives.stdout;
+  test_name := "postfix";
+  test_chspwd !test_name "foobar";
+  test_shadow ();
+  test_passwd ();
+  test_passwd ();
+  test_unshadow ();
+  test_null_passwd !test_name;
+  test_gc ();
   ()
 
 (* Local Variables: *)
