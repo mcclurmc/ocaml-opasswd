@@ -9,7 +9,7 @@ type t = {
   warn     : int64;
   inact    : int64;
   expire   : int64;
-  flag     : int64;
+  flag     : int;
 }
 
 val to_string : t -> string

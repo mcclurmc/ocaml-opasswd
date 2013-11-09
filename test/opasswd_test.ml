@@ -26,7 +26,7 @@ let chspwd_test name pass =
        Printf.printf "%s's lstchg: %Ld\n" name sp.last_chg;
        Printf.printf "%s's min: %Ld\n" name sp.min;
        Printf.printf "%s's max: %Ld\n" name sp.max;
-       Printf.printf "%s's flag: %Ld\n" name sp.flag;
+       Printf.printf "%s's flag: %d\n" name sp.flag;
 
        Printf.printf "setting %s's password to '%s'\n" name pass;
        let sp = { sp with passwd = pass } in

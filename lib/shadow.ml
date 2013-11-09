@@ -11,7 +11,7 @@ type t = {
   warn     : int64;
   inact    : int64;
   expire   : int64;
-  flag     : int64;
+  flag     : int;
 }
 
 type db = t list
@@ -22,26 +22,26 @@ let shadow_t : shadow_t structure typ = structure "passwd"
 
 let sp_name     = shadow_t *:* string
 let sp_passwd   = shadow_t *:* string
-let sp_last_chg = shadow_t *:* int64_t
-let sp_min      = shadow_t *:* int64_t
-let sp_max      = shadow_t *:* int64_t
-let sp_warn     = shadow_t *:* int64_t
-let sp_inact    = shadow_t *:* int64_t
-let sp_expire   = shadow_t *:* int64_t
-let sp_flag     = shadow_t *:* int64_t
+let sp_last_chg = shadow_t *:* long
+let sp_min      = shadow_t *:* long
+let sp_max      = shadow_t *:* long
+let sp_warn     = shadow_t *:* long
+let sp_inact    = shadow_t *:* long
+let sp_expire   = shadow_t *:* long
+let sp_flag     = shadow_t *:* ulong
 
 let () = seal shadow_t
 
 let from_shadow_t sp = {
   name     = getf !@sp sp_name;
   passwd   = getf !@sp sp_passwd;
-  last_chg = getf !@sp sp_last_chg;
-  min      = getf !@sp sp_min;
-  max      = getf !@sp sp_max;
-  warn     = getf !@sp sp_warn;
-  inact    = getf !@sp sp_inact;
-  expire   = getf !@sp sp_expire;
-  flag     = getf !@sp sp_flag;
+  last_chg = getf !@sp sp_last_chg |> Signed.Long.to_int64;
+  min      = getf !@sp sp_min |> Signed.Long.to_int64;
+  max      = getf !@sp sp_max |> Signed.Long.to_int64;
+  warn     = getf !@sp sp_warn |> Signed.Long.to_int64;
+  inact    = getf !@sp sp_inact |> Signed.Long.to_int64;
+  expire   = getf !@sp sp_expire |> Signed.Long.to_int64;
+  flag     = getf !@sp sp_flag |> Unsigned.ULong.to_int;
 }
 
 let from_shadow_t_opt = function
@@ -52,13 +52,13 @@ let to_shadow_t sp =
   let sp_t : shadow_t structure = make shadow_t in
   setf sp_t sp_name sp.name;
   setf sp_t sp_passwd sp.passwd;
-  setf sp_t sp_last_chg sp.last_chg;
-  setf sp_t sp_min sp.min;
-  setf sp_t sp_max sp.max;
-  setf sp_t sp_warn sp.warn;
-  setf sp_t sp_inact sp.inact;
-  setf sp_t sp_expire sp.expire;
-  setf sp_t sp_flag sp.flag;
+  setf sp_t sp_last_chg (Signed.Long.of_int64 sp.last_chg);
+  setf sp_t sp_min (Signed.Long.of_int64 sp.min);
+  setf sp_t sp_max (Signed.Long.of_int64 sp.max);
+  setf sp_t sp_warn (Signed.Long.of_int64 sp.warn);
+  setf sp_t sp_inact (Signed.Long.of_int64 sp.inact);
+  setf sp_t sp_expire (Signed.Long.of_int64 sp.expire);
+  setf sp_t sp_flag (Unsigned.ULong.of_int sp.flag);
   sp_t
 
 let shadow_file = "/etc/shadow"
@@ -114,7 +114,7 @@ let to_string p =
     if (Int64.compare i 0L) >= 0
     then Int64.to_string i
     else "" in
-  Printf.sprintf "%s:%s:%s:%s:%s:%s:%s:%s:%s"
+  Printf.sprintf "%s:%s:%s:%s:%s:%s:%s:%s:%d"
     p.name
     p.passwd
     (str p.last_chg)
@@ -123,7 +123,7 @@ let to_string p =
     (str p.warn)
     (str p.inact)
     (str p.expire)
-    (str p.flag)
+    p.flag
 
 let db_to_string db = db
   |> List.map to_string
